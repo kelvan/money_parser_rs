@@ -1,5 +1,5 @@
-use chrono::{NaiveDate};
-use serde::{Serialize, Deserialize};
+use chrono::NaiveDate;
+use serde::Deserialize;
 use serde_trim::string_trim;
 use crate::booking;
 use std::cmp;
@@ -7,9 +7,9 @@ use std::error::Error;
 use rust_decimal::Decimal;
 
 
-#[derive(Serialize, Deserialize, Debug)]
+#[derive(Deserialize, Debug)]
 pub struct EasybankLine {
-    iban: String,
+    _iban: String,
     #[serde(deserialize_with = "string_trim")]
     text: String,
     #[serde(with = "easybank_date_format", rename = "Booking date")]
@@ -24,18 +24,8 @@ pub struct EasybankLine {
 mod decimal_format {
     use rust_decimal::Decimal;
     use rust_decimal::prelude::FromStr;
-    use serde::{self, Deserialize, Serializer, Deserializer};
+    use serde::{self, Deserialize, Deserializer};
 
-    pub fn serialize<S>(
-        value: &Decimal,
-        serializer: S,
-    ) -> Result<S::Ok, S::Error>
-    where
-        S: Serializer,
-    {
-        let s = format!("{}", value);
-        serializer.serialize_str(&s)
-    }
     pub fn deserialize<'de, D>(
         deserializer: D,
     ) -> Result<Decimal, D::Error>
@@ -52,20 +42,10 @@ mod decimal_format {
 
 mod easybank_date_format {
     use chrono::{NaiveDate};
-    use serde::{self, Deserialize, Serializer, Deserializer};
+    use serde::{self, Deserialize, Deserializer};
 
     const FORMAT: &str = "%d.%m.%Y";
 
-    pub fn serialize<S>(
-        date: &NaiveDate,
-        serializer: S,
-    ) -> Result<S::Ok, S::Error>
-    where
-        S: Serializer,
-    {
-        let s = format!("{}", date.format(FORMAT));
-        serializer.serialize_str(&s)
-    }
     pub fn deserialize<'de, D>(
         deserializer: D,
     ) -> Result<NaiveDate, D::Error>
@@ -99,7 +79,7 @@ pub fn parse_from_file(path: String) -> Result<Vec<booking::BookingLine>, Box<dy
                 credit: Some(cmp::max(Decimal::new(0, 0), line.amount)),
                 debit: Some(cmp::min(Decimal::new(0, 0), line.amount).abs()),
                 balance: None,
-                currency: Some(line.currency),
+                currency: Some(line.currency)
             }
         );
     }

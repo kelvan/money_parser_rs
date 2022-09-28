@@ -1,5 +1,5 @@
 use chrono::NaiveDate;
-use serde::{Deserialize};
+use serde::Deserialize;
 use serde_trim::string_trim;
 use crate::booking;
 use std::error::Error;
@@ -90,7 +90,7 @@ pub fn parse_from_file(path: String) -> Result<Vec<booking::BookingLine>, Box<dy
                 credit: Some(cmp::max(Decimal::new(0, 0), total_amount)),
                 debit: Some(cmp::min(Decimal::new(0, 0), total_amount).abs()),
                 balance: Some(line.balance),
-                currency: Some(line.currency),
+                currency: Some(line.currency)
             }
         );
     }

@@ -1,12 +1,12 @@
 use chrono::NaiveDate;
-use serde::{Serialize, Deserialize};
+use serde::Deserialize;
 use serde_trim::string_trim;
 use crate::booking;
 use std::error::Error;
 use rust_decimal::Decimal;
 
 
-#[derive(Serialize, Deserialize, Debug)]
+#[derive(Deserialize, Debug)]
 pub struct SgkbLine {
     #[serde(with = "sgkb_date_format", rename = "Booking date")]
     booking_date: NaiveDate,
@@ -19,24 +19,14 @@ pub struct SgkbLine {
     #[serde(rename = "Credit", default, with = "decimal_format")]
     credit: Decimal,
     #[serde(rename = "Balance", default, with = "decimal_format")]
-    balance: Decimal
+    _balance: Decimal
 }
 
 mod decimal_format {
     use rust_decimal::Decimal;
     use rust_decimal::prelude::FromStr;
-    use serde::{self, Deserialize, Serializer, Deserializer};
+    use serde::{self, Deserialize, Deserializer};
 
-    pub fn serialize<S>(
-        value: &Decimal,
-        serializer: S,
-    ) -> Result<S::Ok, S::Error>
-    where
-        S: Serializer,
-    {
-        let s = format!("{}", value);
-        serializer.serialize_str(&s)
-    }
     pub fn deserialize<'de, D>(
         deserializer: D,
     ) -> Result<Decimal, D::Error>
@@ -53,20 +43,10 @@ mod decimal_format {
 
 mod sgkb_date_format {
     use chrono::{NaiveDate};
-    use serde::{self, Deserialize, Serializer, Deserializer};
+    use serde::{self, Deserialize, Deserializer};
 
     const FORMAT: &str = "%d.%m.%Y";
 
-    pub fn serialize<S>(
-        date: &NaiveDate,
-        serializer: S,
-    ) -> Result<S::Ok, S::Error>
-    where
-        S: Serializer,
-    {
-        let s = format!("{}", date.format(FORMAT));
-        serializer.serialize_str(&s)
-    }
     pub fn deserialize<'de, D>(
         deserializer: D,
     ) -> Result<NaiveDate, D::Error>
@@ -99,7 +79,7 @@ pub fn parse_from_file(path: String) -> Result<Vec<booking::BookingLine>, Box<dy
                 credit: Some(line.credit),
                 debit: Some(line.debit),
                 balance: None,
-                currency: None,
+                currency: None
             }
         );
     }
