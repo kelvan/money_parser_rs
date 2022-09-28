@@ -3,24 +3,23 @@ use serde::{Serialize, Deserialize};
 use serde_trim::string_trim;
 use crate::booking;
 use csv;
+use std::cmp;
 use std::error::Error;
 use rust_decimal::Decimal;
 
 
 #[derive(Serialize, Deserialize, Debug)]
 pub struct EasybankRecord {
+    iban: String,
+    #[serde(deserialize_with = "string_trim")]
+    text: String,
     #[serde(with = "easybank_date_format", rename = "Booking date")]
-    date: NaiveDate,
+    booking_date: NaiveDate,
     #[serde(with = "easybank_date_format", rename = "Value date")]
     value_date: NaiveDate,
-    #[serde(deserialize_with = "string_trim", rename = "Booking text")]
-    text: String,
-    #[serde(rename = "Debit", default, with = "decimal_format")]
-    debit: Decimal,
-    #[serde(rename = "Credit", default, with = "decimal_format")]
-    credit: Decimal,
-    #[serde(rename = "Balance", default, with = "decimal_format")]
-    balance: Decimal
+    #[serde(default, with = "decimal_format")]
+    amount: Decimal,
+    currency: String
 }
 
 mod decimal_format {
@@ -48,7 +47,7 @@ mod decimal_format {
         if s.is_empty() {
             return Ok(Decimal::new(0, 0));
         }
-        Decimal::from_str(&s.replace("'", "")).map_err(serde::de::Error::custom)
+        Decimal::from_str(&s.replace("+", "").replace(".", "").replace(",", ".")).map_err(serde::de::Error::custom)
     }
 }
 
@@ -85,6 +84,7 @@ pub fn parse_from_file(path: String) -> Result<Vec<booking::BookingLine>, Box<dy
 
     let mut rdr = csv::ReaderBuilder::new()
         .delimiter(b';')
+        .has_headers(false)
         .from_path(path)?;
 
     for result in rdr.deserialize() {
@@ -92,15 +92,15 @@ pub fn parse_from_file(path: String) -> Result<Vec<booking::BookingLine>, Box<dy
 
         lines.push(
             booking::BookingLine {
-                date: line.date,
-                booking_date: Some(line.date),
+                date: line.booking_date,
+                booking_date: Some(line.booking_date),
                 value_date: Some(line.value_date),
                 text: line.text,
-                amount: line.credit - line.debit,
-                credit: Some(line.credit),
-                debit: Some(line.debit),
+                amount: line.amount,
+                credit: Some(cmp::max(Decimal::new(0, 0), line.amount)),
+                debit: Some(cmp::min(Decimal::new(0, 0), line.amount).abs()),
                 balance: None,
-                currency: Some(String::from("EUR")),
+                currency: Some(line.currency),
             }
         );
     }

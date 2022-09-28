@@ -10,7 +10,7 @@ use rust_decimal::Decimal;
 #[derive(Serialize, Deserialize, Debug)]
 pub struct SgkbRecord {
     #[serde(with = "sgkb_date_format", rename = "Booking date")]
-    date: NaiveDate,
+    booking_date: NaiveDate,
     #[serde(with = "sgkb_date_format", rename = "Value date")]
     value_date: NaiveDate,
     #[serde(deserialize_with = "string_trim", rename = "Booking text")]
@@ -92,8 +92,8 @@ pub fn parse_from_file(path: String) -> Result<Vec<booking::BookingLine>, Box<dy
 
         lines.push(
             booking::BookingLine {
-                date: line.date,
-                booking_date: Some(line.date),
+                date: line.booking_date,
+                booking_date: Some(line.booking_date),
                 value_date: Some(line.value_date),
                 text: line.text,
                 amount: line.credit - line.debit,
