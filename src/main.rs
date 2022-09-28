@@ -3,6 +3,7 @@ mod writer;
 mod booking;
 use std::{process};
 use reader::{load_csv, MoneyReader};
+use writer::{write_csv, MoneyWriter};
 use clap::Parser;
 use std::str::FromStr;
 
@@ -23,22 +24,21 @@ struct Args {
 fn main() {
     let args = Args::parse();
 
-    println!("Convert from {} to {}\n", args.informat, args.outformat);
-
-    if let Err(err) = load_csv(args.infile.to_string(), MoneyReader::from_str(&args.informat).unwrap()) {
-        println!("error running example: {}", err);
-        process::exit(1);
-    }
+    println!("Convert from {} to {}", args.informat, args.outformat);
 
     let booking_lines = match load_csv(args.infile, MoneyReader::from_str(&args.informat).unwrap()) {
         Ok(lines) => lines,
         Err(err) => {
-            println!("error running example: {}", err);
+            println!("error loading csv: {}", err);
             process::exit(1);
         }
     };
 
-    for line in booking_lines {
-        print!("{:?}\n", line);
+    match write_csv(booking_lines, args.outfile, MoneyWriter::from_str(&args.outformat).unwrap()) {
+        Ok(_) => println!("Finished"),
+        Err(err) => {
+            println!("error writing csv: {}", err);
+            process::exit(1);
+        }
     }
 }

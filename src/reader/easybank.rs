@@ -2,14 +2,13 @@ use chrono::{NaiveDate};
 use serde::{Serialize, Deserialize};
 use serde_trim::string_trim;
 use crate::booking;
-use csv;
 use std::cmp;
 use std::error::Error;
 use rust_decimal::Decimal;
 
 
 #[derive(Serialize, Deserialize, Debug)]
-pub struct EasybankRecord {
+pub struct EasybankLine {
     iban: String,
     #[serde(deserialize_with = "string_trim")]
     text: String,
@@ -34,7 +33,7 @@ mod decimal_format {
     where
         S: Serializer,
     {
-        let s = format!("{}", value.to_string());
+        let s = format!("{}", value);
         serializer.serialize_str(&s)
     }
     pub fn deserialize<'de, D>(
@@ -47,7 +46,7 @@ mod decimal_format {
         if s.is_empty() {
             return Ok(Decimal::new(0, 0));
         }
-        Decimal::from_str(&s.replace("+", "").replace(".", "").replace(",", ".")).map_err(serde::de::Error::custom)
+        Decimal::from_str(&s.replace('+', "").replace('.', "").replace(',', ".")).map_err(serde::de::Error::custom)
     }
 }
 
@@ -55,7 +54,7 @@ mod easybank_date_format {
     use chrono::{NaiveDate};
     use serde::{self, Deserialize, Serializer, Deserializer};
 
-    const FORMAT: &'static str = "%d.%m.%Y";
+    const FORMAT: &str = "%d.%m.%Y";
 
     pub fn serialize<S>(
         date: &NaiveDate,
@@ -88,7 +87,7 @@ pub fn parse_from_file(path: String) -> Result<Vec<booking::BookingLine>, Box<dy
         .from_path(path)?;
 
     for result in rdr.deserialize() {
-        let line: EasybankRecord = result?;
+        let line: EasybankLine = result?;
 
         lines.push(
             booking::BookingLine {
