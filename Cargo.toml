@@ -12,3 +12,6 @@ serde_trim = "0.4.0"
 chrono = "0.4"
 strum = "0.24"
 strum_macros = "0.24"
+clap = { version = "3.2.22", features = ["derive"] }
+rust_decimal = "1.26"
+rust_decimal_macros = "1.26"

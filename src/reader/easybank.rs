@@ -1,4 +1,4 @@
-use chrono::NaiveDate;
+use chrono::{NaiveDate};
 use serde::{Serialize, Deserialize};
 use serde_trim::string_trim;
 use crate::booking;
@@ -8,10 +8,10 @@ use rust_decimal::Decimal;
 
 
 #[derive(Serialize, Deserialize, Debug)]
-pub struct SgkbRecord {
-    #[serde(with = "sgkb_date_format", rename = "Booking date")]
+pub struct EasybankRecord {
+    #[serde(with = "easybank_date_format", rename = "Booking date")]
     date: NaiveDate,
-    #[serde(with = "sgkb_date_format", rename = "Value date")]
+    #[serde(with = "easybank_date_format", rename = "Value date")]
     value_date: NaiveDate,
     #[serde(deserialize_with = "string_trim", rename = "Booking text")]
     text: String,
@@ -52,7 +52,7 @@ mod decimal_format {
     }
 }
 
-mod sgkb_date_format {
+mod easybank_date_format {
     use chrono::{NaiveDate};
     use serde::{self, Deserialize, Serializer, Deserializer};
 
@@ -88,7 +88,7 @@ pub fn parse_from_file(path: String) -> Result<Vec<booking::BookingLine>, Box<dy
         .from_path(path)?;
 
     for result in rdr.deserialize() {
-        let line: SgkbRecord = result?;
+        let line: EasybankRecord = result?;
 
         lines.push(
             booking::BookingLine {
@@ -100,7 +100,7 @@ pub fn parse_from_file(path: String) -> Result<Vec<booking::BookingLine>, Box<dy
                 credit: Some(line.credit),
                 debit: Some(line.debit),
                 balance: None,
-                currency: None,
+                currency: Some(String::from("EUR")),
             }
         );
     }
