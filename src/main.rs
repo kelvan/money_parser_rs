@@ -24,7 +24,7 @@ struct Args {
 fn main() {
     let args = Args::parse();
 
-    println!("Convert from {} to {}", args.informat, args.outformat);
+    println!("Convert {} ({}) -> {} ({})", args.infile, args.informat, args.outfile, args.outformat);
 
     let booking_lines = match load_csv(args.infile, MoneyReader::from_str(&args.informat).unwrap()) {
         Ok(lines) => lines,
