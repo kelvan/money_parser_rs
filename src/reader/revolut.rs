@@ -13,8 +13,8 @@ pub struct RevolutLine {
     _booking_type: String,
     #[serde(rename = "Product")]
     _product: String,
-    #[serde(with = "revolut_date_format", rename = "Completed Date")]
-    booking_date: NaiveDate,
+    #[serde(with = "revolut_date_format_option", rename = "Completed Date")]
+    booking_date: Option<NaiveDate>,
     #[serde(with = "revolut_date_format", rename = "Started Date")]
     value_date: NaiveDate,
     #[serde(deserialize_with = "string_trim", rename = "Description")]
@@ -67,6 +67,26 @@ mod revolut_date_format {
     }
 }
 
+mod revolut_date_format_option {
+    use chrono::{NaiveDate};
+    use serde::{self, Deserialize, Deserializer};
+
+    const FORMAT: &str = "%Y-%m-%d %H:%M:%S";
+
+    pub fn deserialize<'de, D>(
+        deserializer: D,
+    ) -> Result<Option<NaiveDate>, D::Error>
+    where
+        D: Deserializer<'de>,
+    {
+        let s = String::deserialize(deserializer)?;
+        if s.is_empty() {
+            return Ok(None);
+        }
+        NaiveDate::parse_from_str(&s, FORMAT).map_err(serde::de::Error::custom).map(Some)
+    }
+}
+
 
 pub fn parse_from_file(path: String) -> Result<Vec<booking::BookingLine>, Box<dyn Error>> {
     let mut lines: Vec<booking::BookingLine> = Vec::new();
@@ -83,7 +103,7 @@ pub fn parse_from_file(path: String) -> Result<Vec<booking::BookingLine>, Box<dy
         lines.push(
             booking::BookingLine {
                 date: line.value_date,
-                booking_date: Some(line.booking_date),
+                booking_date: line.booking_date,
                 value_date: Some(line.value_date),
                 text: line.text,
                 amount: total_amount,
