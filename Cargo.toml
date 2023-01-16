@@ -6,6 +6,10 @@ edition = "2021"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
+[lib]
+name = "money_parser"
+path = "src/lib.rs"
+
 [[bin]]
 name = "money_parser"
 path = "src/main.rs"
