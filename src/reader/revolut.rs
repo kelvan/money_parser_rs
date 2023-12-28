@@ -1,5 +1,6 @@
 use crate::booking;
 use chrono::NaiveDate;
+use csv::Reader;
 use rust_decimal::Decimal;
 use serde::Deserialize;
 use serde_trim::string_trim;
@@ -83,35 +84,24 @@ mod revolut_date_format_option {
 }
 
 pub fn parse_file(path: String) -> Result<Vec<booking::BookingLine>, Box<dyn Error>> {
-    let mut lines: Vec<booking::BookingLine> = Vec::new();
-    let mut rdr = csv::ReaderBuilder::new().delimiter(b',').from_path(path)?;
-
-    for result in rdr.deserialize() {
-        let line: RevolutLine = result?;
-        let total_amount = line.amount - line.fee;
-
-        lines.push(booking::BookingLine {
-            date: line.value_date,
-            booking_date: line.booking_date,
-            value_date: Some(line.value_date),
-            text: line.text,
-            amount: total_amount,
-            credit: Some(cmp::max(Decimal::new(0, 0), total_amount)),
-            debit: Some(cmp::min(Decimal::new(0, 0), total_amount).abs()),
-            balance: Some(line.balance),
-            currency: Some(line.currency),
-        });
-    }
-    Ok(lines)
+    let rdr = csv::ReaderBuilder::new().delimiter(b',').from_path(path)?;
+    parse(rdr)
 }
 
 pub fn parse_string(csv_content: String) -> Result<Vec<booking::BookingLine>, Box<dyn Error>> {
-    let mut lines: Vec<booking::BookingLine> = Vec::new();
-    let mut rdr = csv::ReaderBuilder::new()
+    let rdr = csv::ReaderBuilder::new()
         .delimiter(b';')
         .from_reader(csv_content.as_bytes());
+    parse(rdr)
+}
 
-    for result in rdr.deserialize() {
+fn parse<T>(rdr: Reader<T>) -> Result<Vec<booking::BookingLine>, Box<dyn Error>>
+where
+    T: std::io::Read,
+{
+    let mut lines: Vec<booking::BookingLine> = Vec::new();
+
+    for result in rdr.into_deserialize() {
         let line: RevolutLine = result?;
         let total_amount = line.amount - line.fee;
 

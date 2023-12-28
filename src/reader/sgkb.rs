@@ -1,5 +1,6 @@
 use crate::booking;
 use chrono::NaiveDate;
+use csv::Reader;
 use rust_decimal::Decimal;
 use serde::Deserialize;
 use serde_trim::string_trim;
@@ -54,36 +55,24 @@ mod sgkb_date_format {
 }
 
 pub fn parse_file(path: String) -> Result<Vec<booking::BookingLine>, Box<dyn Error>> {
-    let mut lines: Vec<booking::BookingLine> = Vec::new();
-
-    let mut rdr = csv::ReaderBuilder::new().delimiter(b';').from_path(path)?;
-
-    for result in rdr.deserialize() {
-        let line: SgkbLine = result?;
-
-        lines.push(booking::BookingLine {
-            date: line.booking_date,
-            booking_date: Some(line.booking_date),
-            value_date: Some(line.value_date),
-            text: line.text,
-            amount: line.credit - line.debit,
-            credit: Some(line.credit),
-            debit: Some(line.debit),
-            balance: None,
-            currency: None,
-        });
-    }
-    Ok(lines)
+    let rdr = csv::ReaderBuilder::new().delimiter(b';').from_path(path)?;
+    parse(rdr)
 }
 
 pub fn parse_string(csv_content: String) -> Result<Vec<booking::BookingLine>, Box<dyn Error>> {
-    let mut lines: Vec<booking::BookingLine> = Vec::new();
-
-    let mut rdr = csv::ReaderBuilder::new()
+    let rdr = csv::ReaderBuilder::new()
         .delimiter(b';')
         .from_reader(csv_content.as_bytes());
+    parse(rdr)
+}
 
-    for result in rdr.deserialize() {
+fn parse<T>(rdr: Reader<T>) -> Result<Vec<booking::BookingLine>, Box<dyn Error>>
+where
+    T: std::io::Read,
+{
+    let mut lines: Vec<booking::BookingLine> = Vec::new();
+
+    for result in rdr.into_deserialize() {
         let line: SgkbLine = result?;
 
         lines.push(booking::BookingLine {
