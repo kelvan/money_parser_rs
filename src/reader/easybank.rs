@@ -34,7 +34,7 @@ mod decimal_format {
         if s.is_empty() {
             return Ok(Decimal::new(0, 0));
         }
-        Decimal::from_str(&s.replace('+', "").replace('.', "").replace(',', "."))
+        Decimal::from_str(&s.replace(['+', '.'], "").replace(',', "."))
             .map_err(serde::de::Error::custom)
     }
 }
@@ -65,6 +65,7 @@ pub fn parse_file(path: String) -> Result<Vec<booking::BookingLine>, Box<dyn Err
 pub fn parse_string(csv_content: String) -> Result<Vec<booking::BookingLine>, Box<dyn Error>> {
     let rdr = csv::ReaderBuilder::new()
         .delimiter(b';')
+        .has_headers(false)
         .from_reader(csv_content.as_bytes());
     parse(rdr)
 }

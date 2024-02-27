@@ -1,5 +1,5 @@
 mod homebank;
-use std::{error::Error};
+use std::error::Error;
 use strum_macros::EnumString;
 use crate::booking;
 
@@ -11,8 +11,7 @@ pub enum MoneyWriter {
 
 
 pub fn write_csv(booking_lines: Vec<booking::BookingLine>, path: String, source_type: MoneyWriter) -> Result<(), Box<dyn Error>> {
-    let result = match source_type {
+    match source_type {
         MoneyWriter::Homebank => homebank::write_csv(booking_lines, path),
-    };
-    result
+    }
 }
