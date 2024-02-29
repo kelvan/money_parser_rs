@@ -2,10 +2,21 @@ mod easybank;
 mod neon;
 mod revolut;
 mod sgkb;
+use csv::Reader;
 use std::error::Error;
 use strum_macros::EnumString;
 
 use crate::booking;
+
+use self::neon::Neon;
+
+pub trait Parser {
+    fn parse<T>(&self, rdr: Reader<T>) -> Result<Vec<booking::BookingLine>, Box<dyn Error>>
+    where
+        T: std::io::Read;
+    fn parse_file(&self, path: String) -> Result<Vec<booking::BookingLine>, Box<dyn Error>>;
+    fn parse_string(&self, csv_content: String) -> Result<Vec<booking::BookingLine>, Box<dyn Error>>;
+}
 
 #[derive(EnumString)]
 pub enum MoneyReader {
