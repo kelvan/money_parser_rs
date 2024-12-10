@@ -103,19 +103,21 @@ where
 
     for result in rdr.into_deserialize() {
         let line: RevolutLine = result?;
-        let total_amount = line.amount - line.fee;
+        if line._state == "COMPLETED" {
+            let total_amount = line.amount - line.fee;
 
-        lines.push(booking::BookingLine {
-            date: line.value_date,
-            booking_date: line.booking_date,
-            value_date: Some(line.value_date),
-            text: line.text,
-            amount: total_amount,
-            credit: Some(cmp::max(Decimal::new(0, 0), total_amount)),
-            debit: Some(cmp::min(Decimal::new(0, 0), total_amount).abs()),
-            balance: Some(line.balance),
-            currency: Some(line.currency),
-        });
+            lines.push(booking::BookingLine {
+                date: line.value_date,
+                booking_date: line.booking_date,
+                value_date: Some(line.value_date),
+                text: line.text,
+                amount: total_amount,
+                credit: Some(cmp::max(Decimal::new(0, 0), total_amount)),
+                debit: Some(cmp::min(Decimal::new(0, 0), total_amount).abs()),
+                balance: Some(line.balance),
+                currency: Some(line.currency),
+            });
+        }
     }
     Ok(lines)
 }
